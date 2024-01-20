@@ -3,8 +3,8 @@ use crate::{Error, ErrorType};
 /// field-line   = field-name ":" OWS field-value OWS
 #[derive(Debug, PartialEq, Eq)]
 pub struct Header {
-    field_name: String,
-    field_value: String,
+    pub field_name: String,
+    pub field_value: String,
 }
 
 impl Header {
@@ -12,9 +12,11 @@ impl Header {
     ///
     /// # Example
     /// ```
-    /// let content_length = Header{field_name: "Content-Length", field_value: "10"};
+    ///# use liten_http::Header;
+    /// let content_length = Header {field_name: "Content-Length".to_string(), field_value:
+    /// "10".to_string()};
     ///
-    /// assert_eq!(Header::new("Content-Length", "10"), content_length)
+    /// assert_eq!(Header::new("Content-Length", "10"), content_length);
     /// ```
     pub fn new(field_name: &str, field_value: &str) -> Header {
         Header {
@@ -29,10 +31,15 @@ impl Header {
     ///
     /// # Example
     /// ```
-    /// let content_type = Header{field_name: "Content-Length", field_value: "10"};
-    /// let field_line = "Content-Length: 23"
+    ///# use liten_http::Header;
+    /// let content_length = Header {
+    /// field_name: "Content-Length".to_string(),
+    /// field_value: "10".to_string()
+    /// };
     ///
-    /// assert_eq!(Header::from_field_line(field_line.to_string()), content_type)
+    /// let field_line = "Content-Length: 10";
+    ///
+    /// assert_eq!(Header::from_field_line(field_line).unwrap(), content_length);
     /// ```
     pub fn from_field_line(header: &str) -> Result<Header, Error> {
         let error = Error {
@@ -69,9 +76,8 @@ impl Header {
     ///
     /// # Example
     /// ```
-    /// let header_section = r#"Host: 127.0.0.1:3000
-    /// Content-Type: application/json
-    /// Content-Length: 23"#;
+    ///# use liten_http::Header;
+    /// let header_section = "Host: 127.0.0.1:3000\r\nContent-Type: application/json\r\nContent-Length: 23";
     ///
     ///
     /// let expected_headers = vec![
@@ -89,10 +95,10 @@ impl Header {
     ///     },
     /// ];
     ///
-    /// assert_eq!(Header::from_section(header_section.to_string()), expected_headers)
+    /// assert_eq!(Header::from_section(header_section.to_string()).unwrap(), expected_headers)
     /// ```
     pub fn from_section(header_section: String) -> Result<Vec<Header>, Error> {
-        let field_lines = header_section.split("\n");
+        let field_lines = header_section.split("\r\n");
 
         let mut headers: Vec<Header> = vec![];
         for line in field_lines {
@@ -145,10 +151,7 @@ mod test {
 
     #[test]
     fn header_from_header_section() {
-        let header_section = r#"Host: 127.0.0.1:3000
-Accept: */*
-Content-Type: application/json
-Content-Length: 23"#;
+        let header_section = "Host: 127.0.0.1:3000\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 23";
 
         let expected_headers = vec![
             Header {

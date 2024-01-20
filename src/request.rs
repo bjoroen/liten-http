@@ -32,7 +32,9 @@ impl Request {
             Err(_) => return Err(parse_error),
         };
 
-        let header = Self::parse_header(parts[1])?;
+        dbg!(&parts[1]);
+
+        let header = Header::from_section(parts[1].to_string())?;
 
         Ok(Request {
             method,
@@ -40,10 +42,6 @@ impl Request {
             protocol_version: String::from(version),
             header,
         })
-    }
-
-    fn parse_header(parts: &str) -> Result<Vec<Header>, Error> {
-        todo!()
     }
 
     fn parse_request_line(request_line: &str) -> Result<(Method, &str, &str), Error> {
@@ -77,18 +75,12 @@ mod tests {
     use crate::{Method, Request};
 
     #[test]
-    fn parse_request_line() {
-        let request_string = "GET / HTTP/1.1";
-        let parsed_method = Request::from_string(request_string).unwrap();
+    fn parse_get_request() {
+        let request_string = "GET / HTTP/1.1\r\nHost: 127.0.0.1:3000\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 23";
+        let request = Request::from_string(request_string).unwrap();
 
-        assert_eq!(
-            parsed_method,
-            Request {
-                method: Method::Get,
-                request_target: String::from("/"),
-                protocol_version: String::from("HTTP/1.1"),
-                header: vec![]
-            }
-        )
+        assert_eq!(request.method, Method::Get);
+        assert_eq!(request.request_target, String::from("/"));
+        assert_eq!(request.protocol_version, String::from("HTTP/1.1"));
     }
 }
