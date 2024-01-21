@@ -12,6 +12,7 @@ pub struct Request {
     //  HTTP-name     = %s"HTTP"
     protocol_version: String,
     header: Vec<Header>,
+    body: String,
 }
 
 impl Request {
@@ -42,11 +43,14 @@ impl Request {
             .flat_map(|x| Header::from_field_line(x))
             .collect();
 
+        let body = String::from("");
+
         Ok(Request {
             method,
             request_target: String::from(path),
             protocol_version: String::from(version),
             header,
+            body,
         })
     }
 
@@ -116,5 +120,24 @@ mod tests {
                 field_value: String::from("23")
             }
         )
+    }
+
+    #[test]
+    fn parse_post_request() {
+        let request_string = "POST / HTTP/1.1\r\nHost: 127.0.0.1:3000\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 18\r\n\r\n{\"hello\": \"world\"}";
+
+        let request = Request::from_string(request_string).unwrap();
+
+        assert_eq!(request.method, Method::Post);
+        assert_eq!(request.request_target, String::from("/"));
+        assert_eq!(request.protocol_version, String::from("HTTP/1.1"));
+        assert_eq!(
+            request.header[3],
+            Header {
+                field_name: String::from("Content-Length"),
+                field_value: String::from("18")
+            }
+        );
+        assert_eq!(request.body, "{\"hello\": \"world\"}")
     }
 }
