@@ -25,16 +25,22 @@ impl Request {
             error_msg: "invalid request format".to_string(),
         };
 
-        let parts: Vec<&str> = request_string.split("\r\n").collect();
+        let mut parts = request_string.split("\r\n");
 
-        let (method, path, version) = match Self::parse_request_line(parts[0]) {
+        let start_line = match parts.next() {
+            Some(v) => v,
+            None => return Err(parse_error),
+        };
+
+        let (method, path, version) = match Self::parse_request_line(start_line) {
             Ok(v) => v,
             Err(_) => return Err(parse_error),
         };
 
-        dbg!(&parts[1]);
-
-        let header = Header::from_section(parts[1].to_string())?;
+        let header = parts
+            .take_while(|x| x.to_string() != "")
+            .flat_map(|x| Header::from_field_line(x))
+            .collect();
 
         Ok(Request {
             method,
@@ -72,7 +78,7 @@ impl Request {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Method, Request};
+    use crate::{Header, Method, Request};
 
     #[test]
     fn parse_get_request() {
@@ -82,5 +88,33 @@ mod tests {
         assert_eq!(request.method, Method::Get);
         assert_eq!(request.request_target, String::from("/"));
         assert_eq!(request.protocol_version, String::from("HTTP/1.1"));
+        assert_eq!(
+            request.header[0],
+            Header {
+                field_name: String::from("Host"),
+                field_value: String::from("127.0.0.1:3000")
+            }
+        );
+        assert_eq!(
+            request.header[1],
+            Header {
+                field_name: String::from("Accept"),
+                field_value: String::from("*/*")
+            }
+        );
+        assert_eq!(
+            request.header[2],
+            Header {
+                field_name: String::from("Content-Type"),
+                field_value: String::from("application/json")
+            }
+        );
+        assert_eq!(
+            request.header[3],
+            Header {
+                field_name: String::from("Content-Length"),
+                field_value: String::from("23")
+            }
+        )
     }
 }
