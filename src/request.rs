@@ -41,9 +41,9 @@ impl Request {
 
         let mut header = vec![];
         while let Some(h) = parts_iter.next() {
-            match h {
+            match *h {
                 // Skip empty line between headers and body
-                &"" => {
+                "" => {
                     break;
                 }
                 _ => header.push(Header::from_field_line(h)?),
