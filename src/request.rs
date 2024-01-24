@@ -12,7 +12,7 @@ pub struct Request {
     //  HTTP-name     = %s"HTTP"
     protocol_version: String,
     header: Vec<Header>,
-    body: String,
+    body: Option<String>,
 }
 
 impl Request {
@@ -26,9 +26,10 @@ impl Request {
             error_msg: "invalid request format".to_string(),
         };
 
-        let mut parts = request_string.split("\r\n");
+        let parts: Vec<&str> = request_string.split("\r\n").collect();
+        let mut parts_iter = parts.iter();
 
-        let start_line = match parts.next() {
+        let start_line = match parts_iter.next() {
             Some(v) => v,
             None => return Err(parse_error),
         };
@@ -38,12 +39,21 @@ impl Request {
             Err(_) => return Err(parse_error),
         };
 
-        let header = parts
-            .take_while(|x| x.to_string() != "")
-            .flat_map(|x| Header::from_field_line(x))
-            .collect();
+        let mut header = vec![];
+        while let Some(h) = parts_iter.next() {
+            match h {
+                // Skip empty line between headers and body
+                &"" => {
+                    break;
+                }
+                _ => header.push(Header::from_field_line(h)?),
+            }
+        }
 
-        let body = String::from("");
+        let body = match parts_iter.next() {
+            Some(v) => Some(v.to_string()),
+            None => None,
+        };
 
         Ok(Request {
             method,
@@ -138,6 +148,6 @@ mod tests {
                 field_value: String::from("18")
             }
         );
-        assert_eq!(request.body, "{\"hello\": \"world\"}")
+        assert_eq!(request.body, Some("{\"hello\": \"world\"}".to_string()))
     }
 }
