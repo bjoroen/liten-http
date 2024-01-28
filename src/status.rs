@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub enum Status {
     Ok,
     SeeOther,
@@ -28,9 +30,9 @@ impl Status {
     }
 }
 
-impl ToString for Status {
-    fn to_string(&self) -> String {
-        format!("{} {}", self.status_code(), self.msg())
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", self.status_code(), self.msg())
     }
 }
 

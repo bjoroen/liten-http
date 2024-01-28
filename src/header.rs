@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{Error, ErrorType};
 
 /// field-line   = field-name ":" OWS field-value OWS
@@ -5,6 +7,12 @@ use crate::{Error, ErrorType};
 pub struct Header {
     pub field_name: String,
     pub field_value: String,
+}
+
+impl Display for Header {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}\r\n", self.field_name, self.field_value)
+    }
 }
 
 impl Header {
@@ -51,8 +59,8 @@ impl Header {
             None => return Err(error),
         };
 
-        // field-values have a OWS at the start and at the end of the field, remove it if its
-        // there to not include it in the header struct
+        // field-values have a OWS at the start and at the end of the field, remove it
+        // so its not include it in the header struct
         let mut field_value_no_ows = field_value.chars().collect::<Vec<char>>();
         if !field_value_no_ows.is_empty() {
             if field_value_no_ows[0].is_whitespace() {
