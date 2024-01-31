@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::error::{Error, ErrorType};
 use crate::{Header, Method};
 
@@ -6,13 +8,32 @@ use crate::{Header, Method};
 /// and ends with the protocol version.
 /// request-line = method SP request-target SP HTTP-version
 pub struct Request {
-    method: Method,
-    request_target: String,
+    pub method: Method,
+    pub request_target: String,
     //  HTTP-version  = HTTP-name "/" DIGIT "." DIGIT
     //  HTTP-name     = %s"HTTP"
-    protocol_version: String,
-    header: Vec<Header>,
-    body: Option<String>,
+    pub protocol_version: String,
+    pub header: Vec<Header>,
+    pub body: Option<String>,
+}
+
+impl Display for Request {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let body = match &self.body {
+            Some(v) => format!("{}\r\n", v),
+            None => String::from(""),
+        };
+
+        let mut headers = String::new();
+        for h in &self.header {
+            headers.push_str(&h.to_string());
+        }
+        write!(
+            f,
+            "{} {} {}\r\n{}\r\n{}\r\n\r\n",
+            self.method, self.request_target, self.protocol_version, headers, body
+        )
+    }
 }
 
 impl Request {

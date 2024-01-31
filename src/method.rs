@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::error::{Error, ErrorType};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -6,6 +8,12 @@ pub enum Method {
     Post,
     Delete,
     Put,
+}
+
+impl Display for Method {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
 }
 
 impl Method {
